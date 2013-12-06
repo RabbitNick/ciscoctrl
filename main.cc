@@ -17,6 +17,7 @@
 using boost::asio::ip::tcp;
 using namespace std;
 
+
 class telnet_client
 {
 public:
@@ -123,9 +124,15 @@ private:
 	deque<char> write_msgs_; // buffered write data
 };
 
-
 int main(int argc, char* argv[])
 {
+
+
+ 
+namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+
+	
 	// on Unix POXIS based systems, turn off line buffering of input, so cin.get() returns after every keypress
 // On other systems, you'll need to look for an equivalent
 #ifdef POSIX
