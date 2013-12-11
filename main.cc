@@ -28,18 +28,26 @@ int main(int argc, char* argv[])
 #endif
 	try
 	{
+		/*
 		if (argc != 3)
 		{
 			cerr << "Usage: telnet <host> <port>\n";
 			return 1;
-		}
+		}*/
 		boost::asio::io_service io_service;
 		// resolve the host name and port number to an iterator that can be used to connect to the server
 		tcp::resolver resolver(io_service);
 		tcp::resolver::query query(argv[1], TELNET_PORT);
 		tcp::resolver::iterator iterator = resolver.resolve(query);
+
+
+
+
 		// define an instance of the main class of this program
 		telnet_client c(io_service, iterator);
+		class ciscoctrl ciscoctrl_v(c);
+		c._callback(ciscoctrl_v);
+
 		// run the IO service as a separate thread, so the main thread can block on standard input
 		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
 		while (1)
@@ -47,8 +55,9 @@ int main(int argc, char* argv[])
 			char ch;
 			cin.get(ch); // blocking wait for standard input
 			if (ch == 3) // ctrl-C to end program
-				break;
-			c.write(ch);
+				break;  
+			ciscoctrl_v.write(ch);
+		//	c.write(ch);
 		}
 		c.close(); // close the telnet client connection
 		t.join(); // wait for the IO service thread to close

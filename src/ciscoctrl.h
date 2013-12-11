@@ -18,17 +18,91 @@ extern void printhello(void);
 using namespace std;
 using boost::asio::ip::tcp;
 
+
+#define CISCO4400_USER "User"
+#define CISCO4400_PASSWD "Password"
+#define CISCO4400_CTRL "Cisco Controller"
+
+
+struct DetectAP
+{
+	/* data */
+	int rssi;
+	int channel;
+	int report_time;
+	int snr;
+	string name;
+	string mac;
+};
+
+struct rogue_client_property
+{
+	/* data */
+	string mac;
+	int detect_AP_Num;
+	struct DetectAP *detect_AP_point;
+};
+
+
+struct rogue_client_record 
+{
+
+};
+
+class ciscoctrl
+{
+public:
+	ciscoctrl();
+	ciscoctrl(class telnet_client &v)
+	{
+		telnet_client_ptr = &v;
+	}
+	~ciscoctrl()
+	{
+		;
+	}
+     
+    int login(const char &user, const char &passwd);
+    int logout(void);
+    int show_rogue_client_summary(void);
+    int show_rogue_client_detail(const char &mac);
+    int record_rogue_client(struct rogue_client_record &v);
+    int delete_rogue_client(struct rogue_client_record &v);
+
+    int write(const char msg);
+
+    /* data */
+    struct telnet_wr
+    {
+    	/* data */
+    	int len;
+    	char *msgs;
+    };
+    struct telnet_wr telnet_buf;
+  // char *msgs;
+
+    class telnet_client *telnet_client_ptr;
+private:
+	int telnet_write(struct telnet_wr &v);
+};
+
+
 class telnet_client
 {
 public:
 	enum { max_read_length = 512 };
 	
 	telnet_client(boost::asio::io_service& io_service, tcp::resolver::iterator endpoint_iterator);
+	~telnet_client(void);
 	
 	void write(const char msg); // pass the write data to the do_write function via the io service in the other thread
 
 	
 	void close() ;// call the do_close function via the io service in the other thread
+
+	int _callback(class ciscoctrl &v);
+
+	class ciscoctrl *ciscoctrl_ptr;
 
 private:
 

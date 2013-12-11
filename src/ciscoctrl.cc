@@ -10,6 +10,16 @@ void printhello(void)
 }
 
 
+
+
+
+int ciscoctrl::write(const char msg)
+{
+	telnet_client_ptr->write(msg);
+}
+
+
+
 // telnet_client class function
 
 // public function 
@@ -29,8 +39,15 @@ void telnet_client::close() // call the do_close function via the io service in 
 	io_service_.post(boost::bind(&telnet_client::do_close, this));
 }
 
+int telnet_client::_callback(class ciscoctrl &v)
+{
+	ciscoctrl_ptr = &v;
+}
 
-
+telnet_client::~telnet_client(void)
+{
+	delete ciscoctrl_ptr->telnet_buf.msgs;
+}
 
 
 // private function
@@ -69,7 +86,46 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 { // the asynchronous read operation has now completed or failed and returned an error
 	if (!error)
 	{ // read completed, so process the data
+
+
 		cout.write(read_msg_, bytes_transferred); // echo to standard output
+	
+
+ 		// char *p = strstr(read_msg_,"User");
+ 		// std::cout << std::endl;
+ 		// cout.write(p, strlen("User"));
+			// while(1);
+		ciscoctrl_ptr->telnet_buf.msgs = new char[sizeof(read_msg_)];
+		memmove(ciscoctrl_ptr->telnet_buf.msgs, read_msg_,  sizeof(read_msg_));
+
+		if (strstr(read_msg_,"User"))
+		{    
+			char tab[] = "admin\r";
+			for(int i = 0; i < strlen(tab); i++)
+			{
+				write(tab[i]);
+			}
+		}
+
+		if (strstr(read_msg_,"Password"))
+		{    
+			char tab[] = "sonic\r";
+			for(int i = 0; i < strlen(tab); i++)
+			{
+				write(tab[i]);
+			}
+		}
+
+		if (strstr(read_msg_,"Cisco Controller"))
+		{    
+			char tab[] = "show rogue client summary\r";
+			for(int i = 0; i < strlen(tab); i++)
+			{
+				write(tab[i]);
+			}
+		}
+
+		memset(read_msg_, 0, sizeof(read_msg_));
 		//cout << "\n";
 		read_start(); // start waiting for another asynchronous read again
 	}
