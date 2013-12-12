@@ -18,6 +18,58 @@ int ciscoctrl::write(const char msg)
 	telnet_client_ptr->write(msg);
 }
 
+int ciscoctrl::login(const char *user, const char *passwd)
+{
+
+
+	if (strstr(this->telnet_buf.read_msgs,CISCO4400_USER))
+	{ 
+		telnet_buf.write_msgs = user;   
+		telnet_write(telnet_buf);
+	}
+
+	if (strstr(this->telnet_buf.read_msgs, CISCO4400_PASSWD))
+	{    
+	    telnet_buf.write_msgs = passwd;
+		telnet_write(telnet_buf);
+	}
+	return 0;
+}
+
+int ciscoctrl::logout(void)
+{
+
+}
+
+int ciscoctrl::show_rogue_client_summary(void)
+{
+
+}
+
+int ciscoctrl::show_rogue_client_detail(const char &mac)
+{
+
+}
+
+int record_rogue_client(struct rogue_client_record &v)
+{
+
+}
+
+int delete_rogue_client(struct rogue_client_record &v)
+{
+
+}
+
+
+// private class function
+int ciscoctrl::telnet_write(struct telnet_wr &v)
+{
+	for(int i = 0; i < v.write_msgs.length(); i++)
+	{
+		telnet_client_ptr->write(*(v.write_msgs.c_str() + i));		
+	}
+}
 
 
 // telnet_client class function
@@ -46,7 +98,7 @@ int telnet_client::_callback(class ciscoctrl &v)
 
 telnet_client::~telnet_client(void)
 {
-	delete ciscoctrl_ptr->telnet_buf.msgs;
+	delete ciscoctrl_ptr->telnet_buf.read_msgs;
 }
 
 
@@ -95,35 +147,35 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
  		// std::cout << std::endl;
  		// cout.write(p, strlen("User"));
 			// while(1);
-		ciscoctrl_ptr->telnet_buf.msgs = new char[sizeof(read_msg_)];
-		memmove(ciscoctrl_ptr->telnet_buf.msgs, read_msg_,  sizeof(read_msg_));
+		ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
+		memmove(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
 
-		if (strstr(read_msg_,"User"))
-		{    
-			char tab[] = "admin\r";
-			for(int i = 0; i < strlen(tab); i++)
-			{
-				write(tab[i]);
-			}
-		}
+		// if (strstr(read_msg_,"User"))
+		// {    
+		// 	char tab[] = "admin\r";
+		// 	for(int i = 0; i < strlen(tab); i++)
+		// 	{
+		// 		write(tab[i]);
+		// 	}
+		// }
 
-		if (strstr(read_msg_,"Password"))
-		{    
-			char tab[] = "sonic\r";
-			for(int i = 0; i < strlen(tab); i++)
-			{
-				write(tab[i]);
-			}
-		}
+		// if (strstr(read_msg_,"Password"))
+		// {    
+		// 	char tab[] = "sonic\r";
+		// 	for(int i = 0; i < strlen(tab); i++)
+		// 	{
+		// 		write(tab[i]);
+		// 	}
+		// }
 
-		if (strstr(read_msg_,"Cisco Controller"))
-		{    
-			char tab[] = "show rogue client summary\r";
-			for(int i = 0; i < strlen(tab); i++)
-			{
-				write(tab[i]);
-			}
-		}
+		// if (strstr(read_msg_,"Cisco Controller"))
+		// {    
+		// 	char tab[] = "show rogue client summary\r";
+		// 	for(int i = 0; i < strlen(tab); i++)
+		// 	{
+		// 		write(tab[i]);
+		// 	}
+		// }
 
 		memset(read_msg_, 0, sizeof(read_msg_));
 		//cout << "\n";

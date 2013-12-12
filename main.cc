@@ -50,12 +50,20 @@ int main(int argc, char* argv[])
 
 		// run the IO service as a separate thread, so the main thread can block on standard input
 		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+
+		struct DetectAP test = {1,1,1,1,"1","12:23:23:23:45"};
+		ciscoctrl_v.rogue_client.rogue_client_map["rogue_mac"] = test;
+		ciscoctrl_v.rogue_client.rogue_client_map.insert(std::map<string, struct DetectAP> ::value_type("rogue_mac", test));
+
+		PRINTMAP(rogue_client, ciscoctrl_v.rogue_client.rogue_client_map);
+
 		while (1)
 		{
 			char ch;
 			cin.get(ch); // blocking wait for standard input
 			if (ch == 3) // ctrl-C to end program
 				break;  
+			ciscoctrl_v.login(CTRL_USER, CTRL_PASSWD);
 			ciscoctrl_v.write(ch);
 		//	c.write(ch);
 		}

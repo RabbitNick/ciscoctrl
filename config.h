@@ -22,6 +22,9 @@
 
 #define TELNET_PORT "23"
 
+// just for test
+#define CTRL_USER "admin\r"
+#define CTRL_PASSWD "sonic\r"
 
 
 

@@ -5,11 +5,15 @@
 
 #include <iostream>
 #include <string>
+#include <map>
+
 
 #include <deque>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+
+
 
 extern void printhello(void);
 
@@ -22,6 +26,26 @@ using boost::asio::ip::tcp;
 #define CISCO4400_USER "User"
 #define CISCO4400_PASSWD "Password"
 #define CISCO4400_CTRL "Cisco Controller"
+
+
+#define PRINTMAP(mapPrefix, mapName) \
+{\
+	std::map<string, struct DetectAP>::iterator mapPrefix##iter = mapName.begin(); \
+	for(; mapPrefix##iter != mapName.end(); mapPrefix##iter++) \
+	{\
+		std::cout << mapPrefix##iter->first << std::endl; \
+	    std::cout <<  mapPrefix##iter->second.mac << std::endl;\
+   	    std::cout <<  mapPrefix##iter->second.name << std::endl;\
+	    std::cout <<  mapPrefix##iter->second.rssi << std::endl;\
+	    std::cout <<  mapPrefix##iter->second.snr << std::endl;\
+	    std::cout <<  mapPrefix##iter->second.report_time << std::endl;\
+	    std::cout <<  mapPrefix##iter->second.channel << std::endl;\
+   	    std::cout <<  "---------------------------------" << std::endl;\
+	}\
+}
+
+
+
 
 
 struct DetectAP
@@ -41,6 +65,7 @@ struct rogue_client_property
 	string mac;
 	int detect_AP_Num;
 	struct DetectAP *detect_AP_point;
+	std::map<string, struct DetectAP> rogue_client_map;
 };
 
 
@@ -62,7 +87,7 @@ public:
 		;
 	}
      
-    int login(const char &user, const char &passwd);
+    int login(const char *user, const char *passwd);
     int logout(void);
     int show_rogue_client_summary(void);
     int show_rogue_client_detail(const char &mac);
@@ -76,10 +101,11 @@ public:
     {
     	/* data */
     	int len;
-    	char *msgs;
+    	char *read_msgs;
+    	string write_msgs;
     };
     struct telnet_wr telnet_buf;
-  // char *msgs;
+    struct rogue_client_property rogue_client;
 
     class telnet_client *telnet_client_ptr;
 private:
