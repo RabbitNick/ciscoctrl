@@ -38,7 +38,11 @@ int ciscoctrl::login(const char *user, const char *passwd)
 
 int ciscoctrl::logout(void)
 {
-
+	if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
+	{    
+	    telnet_buf.write_msgs = CTRL_LOGOUT;
+		telnet_write(telnet_buf);
+	}
 }
 
 int ciscoctrl::show_rogue_client_summary(void)
@@ -150,32 +154,7 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 		ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
 		memmove(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
 
-		// if (strstr(read_msg_,"User"))
-		// {    
-		// 	char tab[] = "admin\r";
-		// 	for(int i = 0; i < strlen(tab); i++)
-		// 	{
-		// 		write(tab[i]);
-		// 	}
-		// }
 
-		// if (strstr(read_msg_,"Password"))
-		// {    
-		// 	char tab[] = "sonic\r";
-		// 	for(int i = 0; i < strlen(tab); i++)
-		// 	{
-		// 		write(tab[i]);
-		// 	}
-		// }
-
-		// if (strstr(read_msg_,"Cisco Controller"))
-		// {    
-		// 	char tab[] = "show rogue client summary\r";
-		// 	for(int i = 0; i < strlen(tab); i++)
-		// 	{
-		// 		write(tab[i]);
-		// 	}
-		// }
 
 		memset(read_msg_, 0, sizeof(read_msg_));
 		//cout << "\n";

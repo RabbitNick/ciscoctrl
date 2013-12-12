@@ -5,13 +5,49 @@
 
 
 
+class CodeLog *pLog = new class CodeLog((char *)"errors.log");
 
+
+
+static int handler(void* user, const char* section, const char* name,
+                   const char* value)
+{
+    struct ConfigFile* pconfig = (struct ConfigFile*)user;
+
+    #define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
+    if (MATCH("protocol", "version")) {
+        pconfig->version = atoi(value);
+    } else if (MATCH("user", "name")) {
+        pconfig->name = strdup(value);
+    } else if (MATCH("user", "email")) {
+        pconfig->email = strdup(value);
+    }
+}
+
+static int print_config(const struct ConfigFile config)
+{
+	std::cout<< config.version << std::endl;
+	std::cout<< config.name << std::endl;
+	std::cout<< config.email << std::endl;
+}
 
 int main(int argc, char* argv[])
 {
 
+	struct ConfigFile config_v;
 
- 
+
+ 	pLog->Write("main() start......");
+
+
+	if (ini_parse("ciscoctrl.ini", handler, &config_v) < 0) 
+	{
+        printf("Can't load 'test.ini'\n");
+        return 1;
+    }
+    print_config(config_v);
+
+
 	namespace po = boost::program_options;
 	po::options_description desc("Allowed options");
 

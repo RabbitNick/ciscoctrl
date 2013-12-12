@@ -15,6 +15,9 @@
 
 
 
+#include "../config.h"
+
+
 extern void printhello(void);
 
 
@@ -26,6 +29,10 @@ using boost::asio::ip::tcp;
 #define CISCO4400_USER "User"
 #define CISCO4400_PASSWD "Password"
 #define CISCO4400_CTRL "Cisco Controller"
+
+
+
+
 
 
 #define PRINTMAP(mapPrefix, mapName) \

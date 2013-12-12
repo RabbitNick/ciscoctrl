@@ -4,6 +4,11 @@
 
 
 #include "./src/ciscoctrl.h"
+#include "./src/codelog.h"
+#include "./src/ini.h"
+
+
+
 #include <stdlib.h>
 #include <iostream>
 #include <boost/program_options/options_description.hpp>
@@ -25,8 +30,16 @@
 // just for test
 #define CTRL_USER "admin\r"
 #define CTRL_PASSWD "sonic\r"
+#define CTRL_LOGOUT "logout\r"
 
+struct ConfigFile
+{
+    int version;
+    const char* name;
+    const char* email;
+};
 
+extern class CodeLog *pLog;
 
 
 
