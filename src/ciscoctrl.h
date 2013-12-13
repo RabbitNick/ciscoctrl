@@ -3,7 +3,12 @@
 #define CISCOCTRL_H 
 
 
+
+#include "../config.h"
+
+
 #include <iostream>
+//#include <fstream>
 #include <string>
 #include <map>
 
@@ -15,7 +20,6 @@
 
 
 
-#include "../config.h"
 
 
 extern void printhello(void);
@@ -28,10 +32,10 @@ using boost::asio::ip::tcp;
 
 #define CISCO4400_USER "User"
 #define CISCO4400_PASSWD "Password"
-#define CISCO4400_CTRL "Cisco Controller"
+#define CISCO4400_CTRL "(Cisco Controller) >"
 
 
-
+#define RUN_TIMEOUT 30
 
 
 
@@ -97,8 +101,9 @@ public:
     int login(const char *user, const char *passwd);
     int logout(void);
     int show_rogue_client_summary(void);
-    int show_rogue_client_detail(const char &mac);
+    int show_rogue_client_detail(const char *_mac);
     int record_rogue_client(struct rogue_client_record &v);
+    int record_rogue_client();
     int delete_rogue_client(struct rogue_client_record &v);
 
     int write(const char msg);
@@ -111,12 +116,28 @@ public:
     	char *read_msgs;
     	string write_msgs;
     };
+
+    struct state_machine
+    {
+    	std::string ID;
+    	int flag;
+    	enum state {s0, s1, s2, s3, s4, s5};
+    };
+
     struct telnet_wr telnet_buf;
     struct rogue_client_property rogue_client;
 
     class telnet_client *telnet_client_ptr;
+
+   	struct state_machine ctrl_state;
+
+   	ofstream ctrlfile;
+
+
 private:
 	int telnet_write(struct telnet_wr &v);
+	int timeout;
+
 };
 
 

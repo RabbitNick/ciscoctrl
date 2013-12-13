@@ -93,15 +93,60 @@ int main(int argc, char* argv[])
 
 		PRINTMAP(rogue_client, ciscoctrl_v.rogue_client.rogue_client_map);
 
+			std::string cs;
+
 		while (1)
 		{
 			char ch;
 			cin.get(ch); // blocking wait for standard input
 			if (ch == 3) // ctrl-C to end program
 				break;  
+			//cin.get(ch);
+		//	std::cin >> cs;
+			if(ch == 'a')
+			{
+				ciscoctrl_v.ctrl_state.ID = "login";
+				ciscoctrl_v.ctrl_state.flag = ciscoctrl_v.ctrl_state.s1;
+			}
+			if(ch == 'b')
+			{
+				ciscoctrl_v.ctrl_state.ID = "srcs";
+				ciscoctrl_v.ctrl_state.flag = ciscoctrl_v.ctrl_state.s1;
+			}
+			if(ch == 'c')
+			{
+				ciscoctrl_v.ctrl_state.ID = "logout";
+				ciscoctrl_v.ctrl_state.flag = ciscoctrl_v.ctrl_state.s1;
+			}
+			if(ch == 'd')
+			{
+				std::cout << "Please enter the MAC addr" << std::endl;
+				std::cin >> cs;
+				ciscoctrl_v.ctrl_state.ID = "srcd";
+				ciscoctrl_v.ctrl_state.flag = ciscoctrl_v.ctrl_state.s1;
+			}
+			if(ch == 'e')
+			{
+				ciscoctrl_v.ctrl_state.ID = "rrc";
+				ciscoctrl_v.ctrl_state.flag = ciscoctrl_v.ctrl_state.s1;
+			}
+
 			ciscoctrl_v.login(CTRL_USER, CTRL_PASSWD);
-			ciscoctrl_v.write(ch);
-		//	c.write(ch);
+			ciscoctrl_v.show_rogue_client_summary();
+			ciscoctrl_v.show_rogue_client_detail(cs.c_str());
+			ciscoctrl_v.logout();
+			ciscoctrl_v.record_rogue_client();
+
+
+			// if(ch == 'b')
+			// {
+			// 	ciscoctrl_v.show_rogue_client_summary();
+			// }
+			// if(ch == 'c')
+			// {
+			// 	ciscoctrl_v.show_rogue_client_detail("00:12:7b:16:71:05");
+			// }
+		//	ciscoctrl_v.write(ch);
 		}
 		c.close(); // close the telnet client connection
 		t.join(); // wait for the IO service thread to close
