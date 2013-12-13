@@ -270,6 +270,8 @@ int ciscoctrl::record_rogue_client()
 			// ctrlfile.open("mac.txt");
 			// ctrlfile << this->telnet_buf.read_msgs << "\n";
 			// ctrlfile.close();
+
+		//std::cout<< endl<< "adfasdf " << telnet_buf.read_msgs << "sdfasdfg" << endl;
 		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
 		{
 			telnet_buf.write_msgs = "\r";
@@ -403,11 +405,22 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 
 
 		cout.write(read_msg_, bytes_transferred); // echo to standard output
-
+	//	char c;
+	//	cin.get(c);
  		// char *p = strstr(read_msg_,"User");
  		// std::cout << std::endl;
  		// cout.write(p, strlen("User"));
 			// while(1);
+
+			ciscoctrl_ptr->ctrlfile.open("mac.txt" , ios::app);
+			ciscoctrl_ptr->ctrlfile.write(read_msg_, bytes_transferred);
+			ciscoctrl_ptr->ctrlfile.close();
+
+	//	FILE *ifp;
+	//	ifp = fopen("mac.txt", "a");
+	//	fprintf(stderr, read_msg_ );
+	//	fclose(ifp);
+
 		ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
 		memmove(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
 
