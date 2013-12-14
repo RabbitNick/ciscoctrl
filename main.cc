@@ -93,7 +93,28 @@ int main(int argc, char* argv[])
 
 		PRINTMAP(rogue_client, ciscoctrl_v.rogue_client.rogue_client_map);
 
-			std::string cs;
+		std::string cs;
+
+
+
+		boost::regex reg(MAC_REGEX);
+		boost::cmatch what;
+		string cstr("wef  a.out  sdf  abbb ab efwef   1245    sf  ba:bb:cc:dd:3A:Da wefw");
+		int r = boost::regex_search(cstr.c_str(),what, reg);
+		if(r)
+		{
+			std::cout << "match !!!!" << std::endl;
+			for(boost::cmatch::iterator itr = what.begin(); itr != what.end(); itr++)
+			{
+				std::cout << itr->first << "   " << *itr << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << "sorry" << std::endl;			
+			exit(0);
+		}
+		
 
 		while (1)
 		{

@@ -8,7 +8,7 @@ set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
 
-FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS system program_options thread)
+FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS system program_options thread regex)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS}) 
 

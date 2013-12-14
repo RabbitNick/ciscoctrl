@@ -79,6 +79,7 @@ int ciscoctrl::login(const char *user, const char *passwd)
 		timeout = 0;
 	}
 
+
 	return 0;
 }
 
@@ -240,7 +241,7 @@ int ciscoctrl::record_rogue_client(struct rogue_client_record &v)
 
 }
 
-int ciscoctrl::record_rogue_client()
+int ciscoctrl::record_rogue_client(void)
 {
 	timeout = 0;
 	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
@@ -358,6 +359,7 @@ void telnet_client::close() // call the do_close function via the io service in 
 int telnet_client::_callback(class ciscoctrl &v)
 {
 	ciscoctrl_ptr = &v;
+	ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
 }
 
 telnet_client::~telnet_client(void)
@@ -421,7 +423,7 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 	//	fprintf(stderr, read_msg_ );
 	//	fclose(ifp);
 
-		ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
+	//	ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
 		memmove(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
 
 

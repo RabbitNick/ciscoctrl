@@ -35,6 +35,15 @@ using boost::asio::ip::tcp;
 #define CISCO4400_CTRL "(Cisco Controller) >"
 
 
+#define MAC_REGEX "[[:xdigit:]][[:xdigit:]]:"\
+					"[[:xdigit:]][[:xdigit:]]:"\
+					"[[:xdigit:]][[:xdigit:]]:"\
+					"[[:xdigit:]][[:xdigit:]]:"\
+					"[[:xdigit:]][[:xdigit:]]:"\
+					"[[:xdigit:]][[:xdigit:]]"
+
+
+
 #define RUN_TIMEOUT 30
 
 
@@ -103,7 +112,7 @@ public:
     int show_rogue_client_summary(void);
     int show_rogue_client_detail(const char *_mac);
     int record_rogue_client(struct rogue_client_record &v);
-    int record_rogue_client();
+    int record_rogue_client(void);
     int delete_rogue_client(struct rogue_client_record &v);
 
     int write(const char msg);

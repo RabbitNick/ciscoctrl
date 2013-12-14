@@ -18,6 +18,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/regex.hpp>
 
 #include "./src/ciscoctrl.h"
 #include "./src/codelog.h"
@@ -48,6 +49,7 @@ struct ConfigFile
 extern class CodeLog *pLog;
 
 
+//using namespace boost;
 
 
 
