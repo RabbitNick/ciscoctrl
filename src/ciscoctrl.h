@@ -125,6 +125,7 @@ public:
     int record_rogue_client(void);
     int delete_rogue_client(struct rogue_client_record &v);
     int handle_rogue_client(void);
+    int handle_rogue_client_record(void);
 
     int write(const char msg);
 
@@ -142,6 +143,8 @@ public:
     	std::string ID;
     	int flag;
     	enum state {s0, s1, s2, s3, s4, s5};
+    	int record_mac_start;
+    	int record_mac_detail_start;
     };
 
     struct telnet_wr telnet_buf;
@@ -152,6 +155,8 @@ public:
    	struct state_machine ctrl_state;
 
    	ofstream ctrlfile;
+
+   	std::string *record_buffer_ptr;
 
    	boost::regex regex_mac;
 	boost::smatch regex_what;
@@ -167,7 +172,7 @@ private:
 class telnet_client
 {
 public:
-	enum { max_read_length = 512*2 };
+	enum { max_read_length = 512*4 };
 	
 	telnet_client(boost::asio::io_service& io_service, tcp::resolver::iterator endpoint_iterator);
 	~telnet_client(void);

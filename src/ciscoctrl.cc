@@ -235,6 +235,76 @@ int ciscoctrl::show_rogue_client_detail(const char *_mac)
 	return 0;
 }
 
+
+
+int ciscoctrl::show_rogue_client_detail(const char *_mac)
+{
+	timeout = 0;
+	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
+
+	if(ctrl_state.ID != "srcd")
+	{
+		return -1;
+	}
+
+	if(ctrl_state.flag == ctrl_state.s1)
+	{
+		if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
+		{
+			s.insert(27, _mac);
+			telnet_buf.write_msgs = s;
+			telnet_write(telnet_buf);
+			ctrl_state.flag = ctrl_state.s2;
+		}
+		else
+		{
+			timeout++;
+		}	
+	}
+
+	if(ctrl_state.flag == ctrl_state.s2)
+	{
+		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
+		{
+			telnet_buf.write_msgs = "\r";
+			telnet_write(telnet_buf);
+			ctrl_state.flag = ctrl_state.s3;
+		}
+		else
+		{
+			timeout++;
+		}
+	}
+
+	if(ctrl_state.flag == ctrl_state.s3)
+	{
+		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
+		{
+			telnet_buf.write_msgs = "\r";
+			telnet_write(telnet_buf);
+		}
+		else
+		{
+			ctrl_state.flag = ctrl_state.s4;
+		}		
+	}	
+
+
+	if(timeout >= RUN_TIMEOUT)
+	{
+		ctrl_state.flag = ctrl_state.s4;
+	}
+
+	if(ctrl_state.flag == ctrl_state.s4)
+	{
+		ctrl_state.flag = ctrl_state.s0;
+		ctrl_state.ID = "";
+		timeout = 0;
+	}	
+	return 0;
+}
+
+
 int ciscoctrl::record_rogue_client(struct rogue_client_record &v)
 {
 
@@ -295,6 +365,8 @@ int ciscoctrl::record_rogue_client(void)
 		else
 		{
 			ctrl_state.flag = ctrl_state.s4;
+			ctrl_state.record_start = 1;
+
 		}		
 	}	
 
@@ -311,28 +383,46 @@ int ciscoctrl::record_rogue_client(void)
 		timeout = 0;
 	}	
 
-//	memset(this->telnet_buf.read_msgs, 0, 512);
+	if(ctrl_state.record_mac_start == 1)
+	{
+		handle_rogue_client();
+		ctrl_state.record_mac_start = 0;
+	}
+
+
+	if(record_mac_detail_start == 1)
+	{
+
+	}
+
 }
 
 
+int ciscoctrl::handle_rogue_client_record(void)
+{
+	if(telnet_buf.read_msgs == 0)
+	{
+		return -1;
+	}
+	record_buffer_ptr->append(telnet_buf.read_msgs);
+
+}
+
 int ciscoctrl::handle_rogue_client(void)
 {
-
 
 	if(telnet_buf.read_msgs == 0)
 	{
 		return -1;
 	}
 
-	regex_mac = MAC_REGEX;
-	string tmp = telnet_buf.read_msgs;
-	string::const_iterator start = tmp.begin();
-	string::const_iterator end = tmp.end();
 	int r = 0;
+	regex_mac = MAC_REGEX;
+	string::const_iterator start = record_buffer_ptr->begin();
+	string::const_iterator end = record_buffer_ptr->end();
 
 	while(r = boost::regex_search(start, end, regex_what, regex_mac))
 	{
-//		std::cout << "match ! size:" <<  regex_what.str() << std::endl;
 		rogue_client.client_mac.push_back(regex_what.str());
 
 		rogue_client.rogue_client_map[rogue_client.client_mac.back()] = new (struct each_rogue_client_property); // add client mac to a map
@@ -340,17 +430,19 @@ int ciscoctrl::handle_rogue_client(void)
 		start = regex_what[0].second;	//the end of the sub matched string	
 	}
 
-	static int i = 0;
-	ctrlfile.open("mac1.txt" , ios::app);
-  for(; i<rogue_client.client_mac.size(); i++)
-  {
-    ctrlfile << ' ' << rogue_client.client_mac[i];
-    ctrlfile << '\n';
-    //i = rogue_client.client_mac.size();
-  }
-  		ctrlfile.close();
 
+		// 	ctrlfile.open("mac.txt" , ios::app);
+		// ctrlfile << *record_buffer_ptr;
+		// ctrlfile.close();
 
+	// static int i = 0;
+	// ctrlfile.open("mac1.txt" , ios::app);
+  // for(; i<rogue_client.client_mac.size(); i++)
+  // {
+  //   ctrlfile << rogue_client.client_mac[i];
+  //   ctrlfile << '\n';
+  // }
+  		// ctrlfile.close();
 }
 
 
@@ -373,6 +465,9 @@ int ciscoctrl::telnet_write(struct telnet_wr &v)
 }
 
 
+
+
+//----------------------------------------------------------------------------
 // telnet_client class function
 
 // public function 
@@ -397,6 +492,7 @@ int telnet_client::_callback(class ciscoctrl &v)
 {
 	ciscoctrl_ptr = &v;
 	ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
+	ciscoctrl_ptr->record_buffer_ptr =  new string;
 }
 
 telnet_client::~telnet_client(void)
@@ -445,19 +541,20 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 
 		cout.write(read_msg_, bytes_transferred); // echo to standard output
 
-		ciscoctrl_ptr->ctrlfile.open("mac.txt" , ios::app);
-		ciscoctrl_ptr->ctrlfile.write(read_msg_, bytes_transferred);
-		ciscoctrl_ptr->ctrlfile.close();
+		// ciscoctrl_ptr->ctrlfile.open("mac.txt" , ios::app);
+		// ciscoctrl_ptr->ctrlfile.write(read_msg_, bytes_transferred);
+		// ciscoctrl_ptr->ctrlfile << std::endl;
+		// ciscoctrl_ptr->ctrlfile.close();
+
 
 
 		memcpy(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
 
 		if(ciscoctrl_ptr->ctrl_state.ID == "rrc")
 		{
-			ciscoctrl_ptr->handle_rogue_client();// this function have to place here because we need to copy the read_msg_(privte value) to ciscoctrl class.
+			ciscoctrl_ptr->	handle_rogue_client_record();// this function have to place here because we need to copy the read_msg_(privte value) to ciscoctrl class.
 		}
-		string ab;
-		cin >> ab ;
+
 
 		memset(read_msg_, 0, sizeof(read_msg_));
 		//cout << "\n";
