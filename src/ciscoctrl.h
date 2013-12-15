@@ -14,12 +14,15 @@
 
 
 #include <deque>
+#include <vector>
+
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/regex.hpp>
 
-
-
+//#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 
 extern void printhello(void);
@@ -28,7 +31,7 @@ extern void printhello(void);
 
 using namespace std;
 using boost::asio::ip::tcp;
-
+//using namespace boost::numeric::ublas;
 
 #define CISCO4400_USER "User"
 #define CISCO4400_PASSWD "Password"
@@ -65,29 +68,36 @@ using boost::asio::ip::tcp;
 }
 
 
-
-
+struct DetectAP;
+struct rogue_client_property;
+struct each_rogue_client_property;
 
 struct DetectAP
 {
 	/* data */
-	int rssi;
-	int channel;
-	int report_time;
-	int snr;
-	string name;
-	string mac;
+	std::string rssi;
+	std::string channel;
+	std::string report_time;
+	std::string snr;
+	std::string name;
+	std::string mac;
 };
 
 struct rogue_client_property
 {
 	/* data */
-	string mac;
-	int detect_AP_Num;
-	struct DetectAP *detect_AP_point;
-	std::map<string, struct DetectAP> rogue_client_map;
+	std::vector<std::string> client_mac;
+	std::map<std::string, struct each_rogue_client_property*> rogue_client_map;
 };
 
+struct each_rogue_client_property
+{
+	/* data */
+	std::string detect_AP_Num;
+	std::string record_time;
+	struct DetectAP *detect_AP_point;
+	std::map<std::string, struct DetectAP> DetectAP_map;
+};
 
 struct rogue_client_record 
 {
@@ -114,6 +124,7 @@ public:
     int record_rogue_client(struct rogue_client_record &v);
     int record_rogue_client(void);
     int delete_rogue_client(struct rogue_client_record &v);
+    int handle_rogue_client(void);
 
     int write(const char msg);
 
@@ -142,6 +153,9 @@ public:
 
    	ofstream ctrlfile;
 
+   	boost::regex regex_mac;
+	boost::smatch regex_what;
+
 
 private:
 	int telnet_write(struct telnet_wr &v);
@@ -153,7 +167,7 @@ private:
 class telnet_client
 {
 public:
-	enum { max_read_length = 512 };
+	enum { max_read_length = 512*2 };
 	
 	telnet_client(boost::asio::io_service& io_service, tcp::resolver::iterator endpoint_iterator);
 	~telnet_client(void);

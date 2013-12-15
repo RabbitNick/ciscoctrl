@@ -87,33 +87,33 @@ int main(int argc, char* argv[])
 		// run the IO service as a separate thread, so the main thread can block on standard input
 		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
 
-		struct DetectAP test = {1,1,1,1,"1","12:23:23:23:45"};
-		ciscoctrl_v.rogue_client.rogue_client_map["rogue_mac"] = test;
-		ciscoctrl_v.rogue_client.rogue_client_map.insert(std::map<string, struct DetectAP> ::value_type("rogue_mac", test));
+		// struct DetectAP test = {1,1,1,1,"1","12:23:23:23:45"};
+		// ciscoctrl_v.rogue_client.rogue_client_map["rogue_mac"] = test;
+		// ciscoctrl_v.rogue_client.rogue_client_map.insert(std::map<string, struct DetectAP> ::value_type("rogue_mac", test));
 
-		PRINTMAP(rogue_client, ciscoctrl_v.rogue_client.rogue_client_map);
+		// PRINTMAP(rogue_client, ciscoctrl_v.rogue_client.rogue_client_map);
 
 		std::string cs;
 
 
 
-		boost::regex reg(MAC_REGEX);
-		boost::cmatch what;
-		string cstr("wef  a.out  sdf  abbb ab efwef   1245    sf  ba:bb:cc:dd:3A:Da wefw");
-		int r = boost::regex_search(cstr.c_str(),what, reg);
-		if(r)
-		{
-			std::cout << "match !!!!" << std::endl;
-			for(boost::cmatch::iterator itr = what.begin(); itr != what.end(); itr++)
-			{
-				std::cout << itr->first << "   " << *itr << std::endl;
-			}
-		}
-		else
-		{
-			std::cout << "sorry" << std::endl;			
-			exit(0);
-		}
+		//boost::regex reg(MAC_REGEX);
+		//boost::cmatch what;
+		//string cstr("wef  a.out  sdf  abbb ab efwef   1245    sf  ba:bb:cc:dd:3A:Da wefw");
+		// int r = boost::regex_search(cstr.c_str(),what, reg);
+		// if(r)
+		// {
+		// 	std::cout << "match !!!!" << std::endl;
+		// 	for(boost::cmatch::iterator itr = what.begin(); itr != what.end(); itr++)
+		// 	{
+		// 		std::cout << itr->first << "   " << *itr << std::endl;
+		// 	}
+		// }
+		// else
+		// {
+		// 	std::cout << "sorry" << std::endl;			
+		// 	exit(0);
+		// }
 		
 
 		while (1)

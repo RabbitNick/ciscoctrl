@@ -311,7 +311,44 @@ int ciscoctrl::record_rogue_client(void)
 		timeout = 0;
 	}	
 
+//	memset(this->telnet_buf.read_msgs, 0, 512);
+}
 
+
+int ciscoctrl::handle_rogue_client(void)
+{
+
+
+	if(telnet_buf.read_msgs == 0)
+	{
+		return -1;
+	}
+
+	regex_mac = MAC_REGEX;
+	string tmp = telnet_buf.read_msgs;
+	string::const_iterator start = tmp.begin();
+	string::const_iterator end = tmp.end();
+	int r = 0;
+
+	while(r = boost::regex_search(start, end, regex_what, regex_mac))
+	{
+//		std::cout << "match ! size:" <<  regex_what.str() << std::endl;
+		rogue_client.client_mac.push_back(regex_what.str());
+
+		rogue_client.rogue_client_map[rogue_client.client_mac.back()] = new (struct each_rogue_client_property); // add client mac to a map
+
+		start = regex_what[0].second;	//the end of the sub matched string	
+	}
+
+	static int i = 0;
+	ctrlfile.open("mac1.txt" , ios::app);
+  for(; i<rogue_client.client_mac.size(); i++)
+  {
+    ctrlfile << ' ' << rogue_client.client_mac[i];
+    ctrlfile << '\n';
+    //i = rogue_client.client_mac.size();
+  }
+  		ctrlfile.close();
 
 
 }
@@ -407,33 +444,29 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 
 
 		cout.write(read_msg_, bytes_transferred); // echo to standard output
-	//	char c;
-	//	cin.get(c);
- 		// char *p = strstr(read_msg_,"User");
- 		// std::cout << std::endl;
- 		// cout.write(p, strlen("User"));
-			// while(1);
 
-			ciscoctrl_ptr->ctrlfile.open("mac.txt" , ios::app);
-			ciscoctrl_ptr->ctrlfile.write(read_msg_, bytes_transferred);
-			ciscoctrl_ptr->ctrlfile.close();
-
-	//	FILE *ifp;
-	//	ifp = fopen("mac.txt", "a");
-	//	fprintf(stderr, read_msg_ );
-	//	fclose(ifp);
-
-	//	ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
-		memmove(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
+		ciscoctrl_ptr->ctrlfile.open("mac.txt" , ios::app);
+		ciscoctrl_ptr->ctrlfile.write(read_msg_, bytes_transferred);
+		ciscoctrl_ptr->ctrlfile.close();
 
 
+		memcpy(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
+
+		if(ciscoctrl_ptr->ctrl_state.ID == "rrc")
+		{
+			ciscoctrl_ptr->handle_rogue_client();// this function have to place here because we need to copy the read_msg_(privte value) to ciscoctrl class.
+		}
+		string ab;
+		cin >> ab ;
 
 		memset(read_msg_, 0, sizeof(read_msg_));
 		//cout << "\n";
 		read_start(); // start waiting for another asynchronous read again
 	}
 	else
+	{
 		do_close();
+	}
 }
 	
 void telnet_client::do_write(const char msg)
