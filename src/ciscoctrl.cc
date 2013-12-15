@@ -20,7 +20,6 @@ int ciscoctrl::write(const char msg)
 
 int ciscoctrl::login(const char *user, const char *passwd)
 {
-	timeout = 0;
 	if(ctrl_state.ID != "login")
 	{
 
@@ -85,7 +84,6 @@ int ciscoctrl::login(const char *user, const char *passwd)
 
 int ciscoctrl::logout(void)
 {
-	timeout = 0;
 	if(ctrl_state.ID != "logout")
 	{
 		return -1;
@@ -104,7 +102,6 @@ int ciscoctrl::logout(void)
 int ciscoctrl::show_rogue_client_summary(void)
 {
 
-	timeout = 0;
 	if(ctrl_state.ID != "srcs")
 	{
 		return -1;
@@ -168,7 +165,7 @@ int ciscoctrl::show_rogue_client_summary(void)
 
 int ciscoctrl::show_rogue_client_detail(const char *_mac)
 {
-	timeout = 0;
+
 	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
 
 	if(ctrl_state.ID != "srcd")
@@ -237,89 +234,9 @@ int ciscoctrl::show_rogue_client_detail(const char *_mac)
 
 
 
-int ciscoctrl::show_rogue_client_detail(const char *_mac)
+
+int ciscoctrl::record_rogue_client_summary(void)
 {
-	timeout = 0;
-	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
-
-	if(ctrl_state.ID != "srcd")
-	{
-		return -1;
-	}
-
-	if(ctrl_state.flag == ctrl_state.s1)
-	{
-		if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
-		{
-			s.insert(27, _mac);
-			telnet_buf.write_msgs = s;
-			telnet_write(telnet_buf);
-			ctrl_state.flag = ctrl_state.s2;
-		}
-		else
-		{
-			timeout++;
-		}	
-	}
-
-	if(ctrl_state.flag == ctrl_state.s2)
-	{
-		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
-		{
-			telnet_buf.write_msgs = "\r";
-			telnet_write(telnet_buf);
-			ctrl_state.flag = ctrl_state.s3;
-		}
-		else
-		{
-			timeout++;
-		}
-	}
-
-	if(ctrl_state.flag == ctrl_state.s3)
-	{
-		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
-		{
-			telnet_buf.write_msgs = "\r";
-			telnet_write(telnet_buf);
-		}
-		else
-		{
-			ctrl_state.flag = ctrl_state.s4;
-		}		
-	}	
-
-
-	if(timeout >= RUN_TIMEOUT)
-	{
-		ctrl_state.flag = ctrl_state.s4;
-	}
-
-	if(ctrl_state.flag == ctrl_state.s4)
-	{
-		ctrl_state.flag = ctrl_state.s0;
-		ctrl_state.ID = "";
-		timeout = 0;
-	}	
-	return 0;
-}
-
-
-int ciscoctrl::record_rogue_client(struct rogue_client_record &v)
-{
-
-
-}
-
-int ciscoctrl::record_rogue_client(void)
-{
-	timeout = 0;
-	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
-
-	if(ctrl_state.ID != "rrc")
-	{
-		return -1;
-	}
 
 	if(ctrl_state.flag == ctrl_state.s1)
 	{
@@ -365,8 +282,7 @@ int ciscoctrl::record_rogue_client(void)
 		else
 		{
 			ctrl_state.flag = ctrl_state.s4;
-			ctrl_state.record_start = 1;
-
+			ctrl_state.record_mac_start = 1;
 		}		
 	}	
 
@@ -379,20 +295,155 @@ int ciscoctrl::record_rogue_client(void)
 	if(ctrl_state.flag == ctrl_state.s4)
 	{
 		ctrl_state.flag = ctrl_state.s0;
-		ctrl_state.ID = "";
+	//	ctrl_state.ID = "";
 		timeout = 0;
 	}	
+}
+
+int ciscoctrl::record_rogue_client_detail(const char *_mac)
+{
+	//timeout = 0;
+	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
+
+
+	if(ctrl_state.flag == ctrl_state.s1)
+	{
+		if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
+		{
+			s.insert(27, _mac);
+			telnet_buf.write_msgs = s;
+			telnet_write(telnet_buf);
+			ctrl_state.flag = ctrl_state.s2;
+			std::cout << "s1   "<< endl;
+		}
+		else
+		{
+			timeout++;
+						std::cout << "s1   timeout"<< endl;
+
+		}	
+	}
+
+	if(ctrl_state.flag == ctrl_state.s2)
+	{
+		std::cout << "s2   "<< endl;
+
+		if(!strstr(telnet_buf.read_msgs, "show rogue client detailed"))
+		{
+			ctrl_state.flag = ctrl_state.s1;
+			//timeout = 0;
+			return -1;
+		}
+		exit(1);
+
+
+		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
+		{
+			telnet_buf.write_msgs = "\r";
+			telnet_write(telnet_buf);
+			ctrl_state.flag = ctrl_state.s3;
+						std::cout << "s2   "<< endl;
+
+		}
+		else
+		{
+			timeout++;
+			std::cout << "s2  timeout "<< timeout << endl;
+
+		}
+	}
+
+	if(ctrl_state.flag == ctrl_state.s3)
+	{
+		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
+		{
+			telnet_buf.write_msgs = "\r";
+			telnet_write(telnet_buf);
+						std::cout << "s3   "<< endl;
+
+		}
+		else
+		{
+			ctrl_state.flag = ctrl_state.s4;
+						std::cout << "s3  timeout "<< endl;
+
+		}		
+	}	
+
+
+	if(timeout >= RUN_TIMEOUT)
+	{
+		ctrl_state.flag = ctrl_state.s4;
+//		std::cout << "timeout   " << timeout<< endl;
+
+	}
+
+	if(ctrl_state.flag == ctrl_state.s4)
+	{
+		ctrl_state.flag = ctrl_state.s0;
+		ctrl_state.record_mac_detail_start = 1;
+
+	//	ctrl_state.ID = "";
+		timeout = 0;
+	}	
+	return 0;
+}
+
+int ciscoctrl::record_rogue_client(struct rogue_client_record &v)
+{
+
+
+}
+
+
+
+int ciscoctrl::record_rogue_client(void)
+{
+	if(ctrl_state.ID != "rrc")
+	{
+		return -1;
+	}
+
+	if(ctrl_state.record_mac_start == 0)
+	{
+		record_rogue_client_summary();
+	}
 
 	if(ctrl_state.record_mac_start == 1)
 	{
 		handle_rogue_client();
-		ctrl_state.record_mac_start = 0;
+		ctrl_state.record_mac_start = 2;
+		ctrl_state.flag = ctrl_state.s1;
 	}
 
 
-	if(record_mac_detail_start == 1)
+	if(ctrl_state.record_mac_start == 2)
 	{
+		static int i = 0;
+		while(1)
+		{
+		record_rogue_client_detail(rogue_client.client_mac[i].c_str());
 
+		if(ctrl_state.flag == ctrl_state.s0)
+		{
+			i++;
+			if(i >= rogue_client.client_mac.size())
+			{
+				ctrl_state.ID.clear();
+				i = 0;
+				break;
+			}
+			ctrl_state.flag = 1;
+			std::cout<< rogue_client.client_mac.size()<<  "   " << i << endl;
+		}
+		}
+
+		record_buffer_ptr->clear();
+	}
+
+	if(ctrl_state.record_mac_detail_start == 1)
+	{
+		;
 	}
 
 }

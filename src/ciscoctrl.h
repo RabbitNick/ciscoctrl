@@ -111,6 +111,10 @@ public:
 	ciscoctrl(class telnet_client &v)
 	{
 		telnet_client_ptr = &v;
+		ctrl_state.flag = 0;
+		ctrl_state.record_mac_start = 0;
+		ctrl_state.record_mac_detail_start = 0;
+		timeout = 0;
 	}
 	~ciscoctrl()
 	{
@@ -126,6 +130,8 @@ public:
     int delete_rogue_client(struct rogue_client_record &v);
     int handle_rogue_client(void);
     int handle_rogue_client_record(void);
+    int record_rogue_client_detail(const char *_mac);
+    int record_rogue_client_summary(void);
 
     int write(const char msg);
 
