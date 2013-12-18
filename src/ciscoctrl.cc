@@ -161,6 +161,8 @@ int ciscoctrl::show_rogue_client_summary(void)
 		ctrl_state.ID = "";
 		timeout = 0;
 	}
+
+//	memset(telnet_buf.read_msgs, 0, telnet_client_ptr->max_read_length * sizeof(char));
 }
 
 int ciscoctrl::show_rogue_client_detail(const char *_mac)
@@ -238,6 +240,11 @@ int ciscoctrl::show_rogue_client_detail(const char *_mac)
 int ciscoctrl::record_rogue_client_summary(void)
 {
 
+	if(can_read == 0)
+	{
+		return -1;
+	}
+
 	if(ctrl_state.flag == ctrl_state.s1)
 	{
 		if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
@@ -250,26 +257,43 @@ int ciscoctrl::record_rogue_client_summary(void)
 		{
 			timeout++;
 		}	
+//		cout << "s1" << endl;
 	}
+
+
 
 	if(ctrl_state.flag == ctrl_state.s2)
 	{
 
-			// ctrlfile.open("mac.txt");
-			// ctrlfile << this->telnet_buf.read_msgs << "\n";
-			// ctrlfile.close();
 
-		//std::cout<< endl<< "adfasdf " << telnet_buf.read_msgs << "sdfasdfg" << endl;
+		static int t = 0;
 		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
 		{
 			telnet_buf.write_msgs = "\r";
 			telnet_write(telnet_buf);
 			ctrl_state.flag = ctrl_state.s3;
+			t = 0;
+//		cout << "s2:1" << endl;
+
 		}
 		else
 		{
+
+			if(t <= 10)
+				{
 			timeout++;
+			t++;
+			ctrl_state.flag = ctrl_state.s2;
+			telnet_buf.write_msgs = "\r";
+			telnet_write(telnet_buf);	
+				}
+				else
+				{
+					ctrl_state.flag = ctrl_state.s3;
+				}
+	//			cout << "s2:2" << endl;
 		}
+
 	}
 
 	if(ctrl_state.flag == ctrl_state.s3)
@@ -278,33 +302,46 @@ int ciscoctrl::record_rogue_client_summary(void)
 		{
 			telnet_buf.write_msgs = "\r";
 			telnet_write(telnet_buf);
+//			cout << "s3:1" << endl;
 		}
 		else
 		{
-			ctrl_state.flag = ctrl_state.s4;
+
+
+			
+			if(strstr(this->telnet_buf.read_msgs, ":"))
+			{
+				ctrl_state.flag = ctrl_state.s2;
+	//			cout << "s3:2" << endl;
+			}
+	
+			if (strstr(this->telnet_buf.read_msgs, CISCO4400_CTRL))
+			{
+//											cout << "s3:4" << endl;
+							ctrl_state.flag = ctrl_state.s4;
 			ctrl_state.record_mac_start = 1;
+
+			}
+
 		}		
+		//			cout << "s3" << endl;
 	}	
 
-
-	if(timeout >= RUN_TIMEOUT)
-	{
-		ctrl_state.flag = ctrl_state.s4;
-	}
 
 	if(ctrl_state.flag == ctrl_state.s4)
 	{
 		ctrl_state.flag = ctrl_state.s0;
 	//	ctrl_state.ID = "";
 		timeout = 0;
-	}	
+	}
+
+	can_read = 0;
 }
 
 int ciscoctrl::record_rogue_client_detail(const char *_mac)
 {
 	//timeout = 0;
 	string s = CTRL_SHOW_ROGUE_CLIENT_DETAILED;
-
 
 	if(ctrl_state.flag == ctrl_state.s1)
 	{
@@ -322,35 +359,31 @@ int ciscoctrl::record_rogue_client_detail(const char *_mac)
 						std::cout << "s1   timeout"<< endl;
 
 		}	
+	//	while(1);
 	}
+
+		if(strstr(telnet_buf.read_msgs, "show rogue client"))
+			exit(1);
 
 	if(ctrl_state.flag == ctrl_state.s2)
 	{
-		std::cout << "s2   "<< endl;
-
-		if(!strstr(telnet_buf.read_msgs, "show rogue client detailed"))
-		{
-			ctrl_state.flag = ctrl_state.s1;
-			//timeout = 0;
-			return -1;
-		}
-		exit(1);
-
 
 		if (strstr(this->telnet_buf.read_msgs, "--More-- or (q)uit"))
 		{
 			telnet_buf.write_msgs = "\r";
 			telnet_write(telnet_buf);
 			ctrl_state.flag = ctrl_state.s3;
-						std::cout << "s2   "<< endl;
-
+						std::cout << "s2 :2  "<< endl;
 		}
 		else
 		{
 			timeout++;
-			std::cout << "s2  timeout "<< timeout << endl;
+			std::cout << "s2 :3 timeout "<< timeout << endl;
 
 		}
+
+		
+		memset(this->telnet_buf.read_msgs, 0, 512*4);
 	}
 
 	if(ctrl_state.flag == ctrl_state.s3)
@@ -359,13 +392,15 @@ int ciscoctrl::record_rogue_client_detail(const char *_mac)
 		{
 			telnet_buf.write_msgs = "\r";
 			telnet_write(telnet_buf);
-						std::cout << "s3   "<< endl;
+			std::cout << "s3  :1 "<< endl;
 
 		}
 		else
 		{
+
+			exit(1);
 			ctrl_state.flag = ctrl_state.s4;
-						std::cout << "s3  timeout "<< endl;
+		//				std::cout << "s3  timeout "<< endl;
 
 		}		
 	}	
@@ -406,12 +441,20 @@ int ciscoctrl::record_rogue_client(void)
 
 	if(ctrl_state.record_mac_start == 0)
 	{
-		record_rogue_client_summary();
+		while(1)
+		{
+			record_rogue_client_summary();
+
+			if(ctrl_state.flag == ctrl_state.s0)
+				break;
+		}
 	}
 
 	if(ctrl_state.record_mac_start == 1)
 	{
+
 		handle_rogue_client();
+
 		ctrl_state.record_mac_start = 2;
 		ctrl_state.flag = ctrl_state.s1;
 	}
@@ -426,6 +469,7 @@ int ciscoctrl::record_rogue_client(void)
 
 		if(ctrl_state.flag == ctrl_state.s0)
 		{
+			exit(1);
 			i++;
 			if(i >= rogue_client.client_mac.size())
 			{
@@ -437,8 +481,9 @@ int ciscoctrl::record_rogue_client(void)
 			std::cout<< rogue_client.client_mac.size()<<  "   " << i << endl;
 		}
 		}
+	//	exit(1);
 
-		record_buffer_ptr->clear();
+		//record_buffer_ptr->clear();
 	}
 
 	if(ctrl_state.record_mac_detail_start == 1)
@@ -481,19 +526,19 @@ int ciscoctrl::handle_rogue_client(void)
 		start = regex_what[0].second;	//the end of the sub matched string	
 	}
 
+/*
+		 	ctrlfile.open("mac.txt" , ios::app);
+		 ctrlfile << *record_buffer_ptr;
+		 ctrlfile.close();
 
-		// 	ctrlfile.open("mac.txt" , ios::app);
-		// ctrlfile << *record_buffer_ptr;
-		// ctrlfile.close();
-
-	// static int i = 0;
-	// ctrlfile.open("mac1.txt" , ios::app);
-  // for(; i<rogue_client.client_mac.size(); i++)
-  // {
-  //   ctrlfile << rogue_client.client_mac[i];
-  //   ctrlfile << '\n';
-  // }
-  		// ctrlfile.close();
+	 static int i = 0;
+	 ctrlfile.open("mac1.txt" , ios::app);
+   for(; i<rogue_client.client_mac.size(); i++)
+   {
+     ctrlfile << rogue_client.client_mac[i];
+     ctrlfile << '\n';
+   }
+  		 ctrlfile.close();*/
 }
 
 
@@ -544,6 +589,7 @@ int telnet_client::_callback(class ciscoctrl &v)
 	ciscoctrl_ptr = &v;
 	ciscoctrl_ptr->telnet_buf.read_msgs = new char[sizeof(read_msg_)];
 	ciscoctrl_ptr->record_buffer_ptr =  new string;
+	ciscoctrl_ptr->can_read = 0;
 }
 
 telnet_client::~telnet_client(void)
@@ -597,13 +643,18 @@ void telnet_client::read_complete(const boost::system::error_code& error, size_t
 		// ciscoctrl_ptr->ctrlfile << std::endl;
 		// ciscoctrl_ptr->ctrlfile.close();
 
-
-
+		mtx_.lock();
 		memcpy(ciscoctrl_ptr->telnet_buf.read_msgs, read_msg_,  sizeof(read_msg_));
+		ciscoctrl_ptr->can_read = 1;
+		mtx_.unlock();
+
 
 		if(ciscoctrl_ptr->ctrl_state.ID == "rrc")
 		{
+			mtx_.lock();
 			ciscoctrl_ptr->	handle_rogue_client_record();// this function have to place here because we need to copy the read_msg_(privte value) to ciscoctrl class.
+			mtx_.unlock();
+
 		}
 
 

@@ -7,7 +7,7 @@
 
 class CodeLog *pLog = new class CodeLog((char *)"errors.log");
 
-
+boost::mutex mtx_;
 
 static int handler(void* user, const char* section, const char* name,
                    const char* value)

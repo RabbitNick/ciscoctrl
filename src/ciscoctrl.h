@@ -27,7 +27,7 @@
 
 extern void printhello(void);
 
-
+extern boost::mutex mtx_;
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -166,6 +166,7 @@ public:
 
    	boost::regex regex_mac;
 	boost::smatch regex_what;
+	int can_read;
 
 
 private:
